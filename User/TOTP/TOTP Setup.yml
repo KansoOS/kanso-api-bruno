@@ -1,0 +1,31 @@
+info:
+  name: TOTP Setup
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{host}}/v1/auth/totp/setup"
+  body:
+    type: form-urlencoded
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.secret
+        method: jsonq
+      variable:
+        name: totpSecret
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

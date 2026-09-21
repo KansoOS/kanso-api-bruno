@@ -1,0 +1,61 @@
+info:
+  name: TOTP Enable
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{host}}/v1/auth/totp/enable"
+  body:
+    type: form-urlencoded
+    data:
+      - name: code
+        value: "{{totpCode}}"
+  auth:
+    type: bearer
+    token: "{{accessToken}}"
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const crypto = require('crypto');
+
+        function base32Decode(input) {
+          const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+          let bits = '';
+          for (const char of input.replace(/=+$/, '').toUpperCase()) {
+            bits += alphabet.indexOf(char).toString(2).padStart(5, '0');
+          }
+          const bytes = [];
+          for (let i = 0; i + 8 <= bits.length; i += 8) {
+            bytes.push(parseInt(bits.slice(i, i + 8), 2));
+          }
+          return Buffer.from(bytes);
+        }
+
+        function totp(secret, step) {
+          const message = Buffer.alloc(8);
+          message.writeBigUInt64BE(BigInt(step));
+          const hash = crypto.createHmac('sha1', base32Decode(secret)).update(message).digest();
+          const offset = hash[hash.length - 1] & 0x0f;
+          return String((hash.readUInt32BE(offset) & 0x7fffffff) % 1000000).padStart(6, '0');
+        }
+
+        bru.setVar('totpCode', totp(bru.getVar('totpSecret'), Math.floor(Date.now() / 30000)));
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.recoveryCodes[0]
+        method: jsonq
+      variable:
+        name: recoveryCode
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
