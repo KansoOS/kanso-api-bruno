@@ -1,0 +1,32 @@
+info:
+  name: Create space
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{host}}/v1/spaces"
+  body:
+    type: form-urlencoded
+    data:
+      - name: pseudonym
+        value: test_space
+  auth: inherit
+
+runtime:
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.id
+        method: jsonq
+      variable:
+        name: spaceId
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

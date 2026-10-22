@@ -1,0 +1,33 @@
+info:
+  name: Read space
+  type: http
+  seq: 6
+
+http:
+  method: GET
+  url: "{{host}}/v1/spaces/:id"
+  params:
+    - name: id
+      value: spaceId
+      type: path
+  body:
+    type: form-urlencoded
+  auth: inherit
+
+runtime:
+  actions:
+    - type: set-variable
+      phase: after-response
+      selector:
+        expression: res.body.id
+        method: jsonq
+      variable:
+        name: spaceId
+        scope: runtime
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
