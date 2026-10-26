@@ -1,16 +1,13 @@
 info:
-  name: Create space
+  name: Create mandat
   type: http
-  seq: 5
+  seq: 3
 
 http:
   method: POST
-  url: "{{host}}/v1/spaces"
+  url: "{{host}}/v1/spaces/{{spaceId}}/mandate"
   body:
     type: form-urlencoded
-    data:
-      - name: pseudonym
-        value: test_space
   auth: inherit
 
 runtime:
